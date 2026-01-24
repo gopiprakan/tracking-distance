@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DistTrack | Professional Distance Tracker</title>
+    <meta name="description" content="A professional real-time distance tracking and route planning application.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📍</text></svg>">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <header class="header">
+            <div class="logo-icon">
+                <i data-lucide="navigation"></i>
+            </div>
+            <h1>DistTrack</h1>
+        </header>
+
+        <section class="panel-section">
+            <div class="search-section">
+                <div class="input-group">
+                    <label>Starting Point</label>
+                    <div class="search-input-wrapper">
+                        <i data-lucide="map-pin" class="input-icon start"></i>
+                        <input type="text" id="start-input" placeholder="Enter start location..." autocomplete="off">
+                        <div id="start-suggestions" class="suggestions-list"></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Destination</label>
+                    <div class="search-input-wrapper">
+                        <i data-lucide="flag" class="input-icon end"></i>
+                        <input type="text" id="end-input" placeholder="Enter destination..." autocomplete="off">
+                        <div id="end-suggestions" class="suggestions-list"></div>
+                    </div>
+                </div>
+                <button id="plan-btn" class="btn btn-secondary">
+                    <i data-lucide="calculator"></i>
+                    <span id="plan-btn-text">Calculate</span>
+                    <div class="loader" id="plan-loader"></div>
+                </button>
+            </div>
+
+            <!-- Fuel Calculator Section -->
+            <div class="calculator-card">
+                <div class="card-header">
+                    <i data-lucide="fuel" style="width: 16px;"></i>
+                    <span>Detailed Fuel Calculator</span>
+                </div>
+                <div class="calc-grid">
+                    <div class="input-group mini">
+                        <label>Efficiency (km/L)</label>
+                        <input type="number" id="efficiency-input" value="15" step="0.1">
+                    </div>
+                    <div class="input-group mini">
+                        <label>Fuel Price (₹/L)</label>
+                        <input type="number" id="price-input" value="100" step="0.01">
+                    </div>
+                    <div class="input-group mini">
+                        <label>Tank Cap. (Liters)</label>
+                        <input type="number" id="tank-capacity" value="40" step="1">
+                    </div>
+                    <div class="input-group mini">
+                        <label>Travel Dist (km)</label>
+                        <input type="number" id="manual-dist-input" placeholder="Auto" step="0.1">
+                    </div>
+                </div>
+
+                <div class="calc-breakdown" id="calc-breakdown">
+                    <div class="breakdown-step">
+                        <span class="step-label">1. Fuel Needed:</span>
+                        <span class="step-val"><span id="fuel-needed-val">0.00</span> L</span>
+                    </div>
+                    <div class="breakdown-step">
+                        <span class="step-label">2. Total Cost:</span>
+                        <span class="step-val">₹<span id="total-cost-val">0.00</span></span>
+                    </div>
+                    <div class="breakdown-step">
+                        <span class="step-label">3. Max Range:</span>
+                        <span class="step-val"><span id="max-range-val">0.00</span> km</span>
+                    </div>
+                    <div class="breakdown-step">
+                        <span class="step-label">4. Cost per KM:</span>
+                        <span class="step-val">₹<span id="cost-per-km-val">0.00</span>/km</span>
+                    </div>
+                </div>
+
+                <div class="calc-result">
+                    <div class="result-label">Total Estimated Cost</div>
+                    <div class="result-value">₹<span id="fuel-cost">0.00</span></div>
+                </div>
+            </div>
+
+            <div class="stats-container">
+                <div class="status-indicator">
+                    <div class="status-left">
+                        <span class="dot" id="status-dot"></span>
+                        <span id="status-text">Ready to track</span>
+                    </div>
+                    <div id="accuracy-wrap" style="display: none;">
+                        <span class="accuracy-badge">±<span id="accuracy-val">0</span>m accuracy</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Distance</div>
+                        <div class="stat-value"><span id="dist-val">0.00</span><span class="stat-unit">km</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Duration</div>
+                        <div class="stat-value"><span id="time-val">00:00</span><span class="stat-unit">s</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Avg Speed</div>
+                        <div class="stat-value"><span id="speed-val">0.0</span><span class="stat-unit">km/h</span></div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Current</div>
+                        <div class="stat-value"><span id="curr-speed">0.0</span><span class="stat-unit">km/h</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="start-btn" class="btn btn-primary">
+                    <i data-lucide="play"></i>
+                    Start Real-Time Tracking
+                </button>
+                <button id="stop-btn" class="btn btn-danger" style="display: none;">
+                    <i data-lucide="square"></i>
+                    Stop Tracking
+                </button>
+                <button id="reset-btn" class="btn btn-secondary">
+                    <i data-lucide="refresh-cw"></i>
+                    Reset All Data
+                </button>
+            </div>
+        </section>
+
+        <section class="history-section">
+            <div class="history-title">
+                <span>Recent Trips</span>
+                <i data-lucide="history" style="width: 16px;"></i>
+            </div>
+            <div id="history-list">
+                <!-- History items injected here -->
+            </div>
+        </section>
+    </aside>
+
+    <main class="map-container">
+        <div id="map"></div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
